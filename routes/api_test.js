@@ -2,7 +2,12 @@ let express = require('express');
 let router = express.Router();
 const bip39 = require('bip39');
 const ecc = require('eosjs-ecc');
-
+const { Api, JsonRpc } = require('eosjs');
+const { JsSignatureProvider } = require('eosjs/dist/eosjs-jssig');  // development only
+// const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const fetch = require('node-fetch');
+const { TextDecoder, TextEncoder } = require('util');
+const privateKeys = ['5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3'];
 /**
  * get the seed phrases of 12 words
  *
@@ -116,6 +121,73 @@ router.post('/keys', function(req, res) {
             message: 'failed',
         });
     }
+});
+
+/**
+ * Generate new account
+ *
+ * @param 
+ *  name: new account name
+ *  key: private key
+ * @return  object If success returns success else returns failed
+ *  code: result code
+ *  message: result message
+ *  
+ */
+ router.post('/account/generate', async function(req, res) {
+    if(!req.body || !req.body.key || !req.body.account) {
+        res.json({
+            code: 400,
+            message: 'the parameter is failed',
+        });
+        return;
+    }
+    
+    const signatureProvider = new JsSignatureProvider(privateKeys);
+    const rpc = new JsonRpc('http://127.0.0.1:8888', { fetch });
+    const api = new Api({ rpc, signatureProvider, textDecoder: new TextDecoder(), textEncoder: new TextEncoder() });
+
+    await api.transact({
+        actions: [{
+          account: 'eosio',
+          name: 'newaccount',
+          authorization: [{
+            actor: 'eosio',
+            permission: 'active',
+          }],
+          data: {
+            creator: 'eosio',
+            name: 'mynewaccount',
+            owner: {
+              threshold: 1,
+              keys: [{
+                key: 'EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV',
+                weight: 1
+              }],
+              accounts: [],
+              waits: []
+            },
+            active: {
+              threshold: 1,
+              keys: [{
+                key: 'EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV',
+                weight: 1
+              }],
+            
+              accounts: [],
+              waits: []
+            },
+          },
+        }]
+      }, {
+        blocksBehind: 3,
+        expireSeconds: 30,
+      });
+
+    res.json({
+        code: 200,
+        message: 'success',
+    });
 });
 
 module.exports = router;
