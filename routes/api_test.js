@@ -5,8 +5,8 @@ const ecc = require('eosjs-ecc');
 const { Api, JsonRpc } = require('eosjs');
 const { JsSignatureProvider } = require('eosjs/dist/eosjs-jssig');  // development only
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-// const fetch = require('node-fetch');
 const { TextDecoder, TextEncoder } = require('util');
+
 /**
  * get the seed phrases of 12 words
  *
