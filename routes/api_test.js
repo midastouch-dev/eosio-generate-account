@@ -133,7 +133,7 @@ router.post('/keys', function(req, res) {
  *  message: result message
  *  
  */
- router.post('/account/generate', async function(req, res) {
+ router.post('/account', async function(req, res) {
     if(!req.body || !req.body.key || !req.body.account) {
         res.json({
             code: 400,
@@ -141,7 +141,7 @@ router.post('/keys', function(req, res) {
         });
         return;
     }
-    
+
     const privateKeys = [process.env.EOS_PRIVATE_KEY];
     const signatureProvider = new JsSignatureProvider(privateKeys);
     const rpc = new JsonRpc(process.env.EOS_SERVER_URL, { fetch });
@@ -199,6 +199,43 @@ router.post('/keys', function(req, res) {
         code: 200,
         message: 'success',
     });
+});
+
+/**
+ * Get new account
+ *
+ * @param 
+ *  name: account name
+ * @return  object If success returns account info else returns failed
+ *  code: result code
+ *  message: result message
+ *  data: account
+ */
+ router.get('/account', async function(req, res) {
+    if(!req.query || !req.query.account) {
+        res.json({
+            code: 400,
+            message: 'the parameter is failed',
+        });
+        return;
+    }
+    
+    const rpc = new JsonRpc(process.env.EOS_SERVER_URL, { fetch });
+
+    try{
+        const account = await rpc.get_account(req.query.account);
+        res.json({
+            code: 200,
+            message: 'success',
+            data: account
+        })
+    } catch(e) {
+        console.log(e)
+        res.json({
+            code: 501,
+            message: 'Failed to get account',
+        })
+    }
 });
 
 module.exports = router;
