@@ -7,7 +7,6 @@ const { JsSignatureProvider } = require('eosjs/dist/eosjs-jssig');  // developme
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 // const fetch = require('node-fetch');
 const { TextDecoder, TextEncoder } = require('util');
-const privateKeys = ['5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3'];
 /**
  * get the seed phrases of 12 words
  *
@@ -143,8 +142,9 @@ router.post('/keys', function(req, res) {
         return;
     }
     
+    const privateKeys = [process.env.EOS_PRIVATE_KEY];
     const signatureProvider = new JsSignatureProvider(privateKeys);
-    const rpc = new JsonRpc('http://127.0.0.1:8888', { fetch });
+    const rpc = new JsonRpc(process.env.EOS_SERVER_URL, { fetch });
     const api = new Api({ rpc, signatureProvider, textDecoder: new TextDecoder(), textEncoder: new TextEncoder() });
 
     const new_pub_key = req.body.key;
