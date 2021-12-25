@@ -4,8 +4,8 @@ const bip39 = require('bip39');
 const ecc = require('eosjs-ecc');
 const { Api, JsonRpc } = require('eosjs');
 const { JsSignatureProvider } = require('eosjs/dist/eosjs-jssig');  // development only
-// const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+// const fetch = require('node-fetch');
 const { TextDecoder, TextEncoder } = require('util');
 const privateKeys = ['5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3'];
 /**
@@ -147,42 +147,53 @@ router.post('/keys', function(req, res) {
     const rpc = new JsonRpc('http://127.0.0.1:8888', { fetch });
     const api = new Api({ rpc, signatureProvider, textDecoder: new TextDecoder(), textEncoder: new TextEncoder() });
 
-    await api.transact({
-        actions: [{
-          account: 'eosio',
-          name: 'newaccount',
-          authorization: [{
-            actor: 'eosio',
-            permission: 'active',
-          }],
-          data: {
-            creator: 'eosio',
-            name: 'mynewaccount',
-            owner: {
-              threshold: 1,
-              keys: [{
-                key: 'EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV',
-                weight: 1
+    const new_pub_key = req.body.key;
+    const new_account = req.body.account;
+
+    try{
+        await api.transact({
+            actions: [{
+              account: 'eosio',
+              name: 'newaccount',
+              authorization: [{
+                actor: 'eosio',
+                permission: 'active',
               }],
-              accounts: [],
-              waits: []
-            },
-            active: {
-              threshold: 1,
-              keys: [{
-                key: 'EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV',
-                weight: 1
-              }],
-            
-              accounts: [],
-              waits: []
-            },
-          },
-        }]
-      }, {
-        blocksBehind: 3,
-        expireSeconds: 30,
-      });
+              data: {
+                creator: 'eosio',
+                name: new_account,
+                owner: {
+                  threshold: 1,
+                  keys: [{
+                    key: new_pub_key,
+                    weight: 1
+                  }],
+                  accounts: [],
+                  waits: []
+                },
+                active: {
+                  threshold: 1,
+                  keys: [{
+                    key: new_pub_key,
+                    weight: 1
+                  }],
+                
+                  accounts: [],
+                  waits: []
+                },
+              },
+            }]
+          }, {
+            blocksBehind: 3,
+            expireSeconds: 30,
+          });
+    } catch(e) {
+        console.log(e)
+        res.json({
+            code: 501,
+            message: 'Failed to create account',
+        })
+    }
 
     res.json({
         code: 200,
