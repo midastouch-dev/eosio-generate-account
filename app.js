@@ -4,6 +4,7 @@ let bodyParser = require('body-parser');
 let apiTest = require('./routes/api_test');
 
 let app = express();
+require('dotenv').config();
 
 app.get('/', function (req, res) {
     res.send('Server is running');
