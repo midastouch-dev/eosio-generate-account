@@ -202,7 +202,7 @@ router.post('/keys', function(req, res) {
 });
 
 /**
- * Get new account
+ * Get account from name
  *
  * @param 
  *  name: account name
@@ -234,6 +234,43 @@ router.post('/keys', function(req, res) {
         res.json({
             code: 501,
             message: 'Failed to get account',
+        })
+    }
+});
+
+/**
+ * Get account list from pub key
+ *
+ * @param 
+ *  name: public key
+ * @return  object If success returns account info else returns failed
+ *  code: result code
+ *  message: result message
+ *  data: account list
+ */
+ router.get('/accounts', async function(req, res) {
+    if(!req.query || !req.query.key) {
+        res.json({
+            code: 400,
+            message: 'the parameter is failed',
+        });
+        return;
+    }
+
+    const rpc = new JsonRpc(process.env.EOS_SERVER_URL, { fetch });
+
+    try{
+        const accounts = await rpc.history_get_key_accounts(req.query.key);
+        res.json({
+            code: 200,
+            message: 'success',
+            data: accounts
+        })
+    } catch(e) {
+        console.log(e)
+        res.json({
+            code: 501,
+            message: 'Failed to get accounts',
         })
     }
 });
